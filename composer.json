@@ -1,0 +1,23 @@
+{
+    "name": "scrawler/storage",
+    "description": "storage system for scrawler framework",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Scrawler\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "ipranjal",
+            "email": "pranjaltech10@gmail.com"
+        }
+    ],
+    "require": {
+        "league/flysystem": "^3.0"
+    }
+}
