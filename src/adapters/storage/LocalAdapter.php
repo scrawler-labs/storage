@@ -17,6 +17,6 @@ class LocalAdapter extends LocalFilesystemAdapter implements StorageInterface{
     }
 
     public function getUrl($path){
-        return url('/storage/'.$path);
+        return url(\Scrawler\App::engine()->config()->get('storage.local').'/'.$path);
     }
 }
