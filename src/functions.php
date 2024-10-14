@@ -1,21 +1,30 @@
 <?php
+/*
+ * This file is part of the Scrawler package.
+ *
+ * (c) Pranjal Pandey <its.pranjalpandey@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 if (!function_exists('storage')) {
-    function storage()
+    function storage(): Scrawler\Storage
     {
         if (class_exists('\Scrawler\App')) {
-            if (!\Scrawler\App::engine()->has('storage')) {
-                \Scrawler\App::engine()->register('storage', new Scrawler\Storage());
+            if (!Scrawler\App::engine()->has('storage')) {
+                Scrawler\App::engine()->register('storage', new Scrawler\Storage());
             }
-            return \Scrawler\App::engine()->storage();
+
+            return Scrawler\App::engine()->storage();
         }
+
         return new Scrawler\Storage();
     }
-
 }
 
 if (!function_exists('storage_url')) {
-    function storage_url($path)
+    function storage_url(string $path): string
     {
         return storage()->getUrl($path);
     }

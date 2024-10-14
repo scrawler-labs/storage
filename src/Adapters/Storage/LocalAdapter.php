@@ -1,22 +1,32 @@
 <?php
-/**
- * Adapter for storing in local filesystem
+/*
+ * This file is part of the Scrawler package.
  *
- * @package: Scrawler
- * @author: Pranjal Pandey
+ * (c) Pranjal Pandey <its.pranjalpandey@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 namespace Scrawler\Adapters\Storage;
 
-use Scrawler\Interfaces\StorageInterface;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Scrawler\Interfaces\StorageInterface;
 
-class LocalAdapter extends LocalFilesystemAdapter implements StorageInterface{
-
-    public function __construct($storagePath){
+class LocalAdapter extends LocalFilesystemAdapter implements StorageInterface
+{
+    public function __construct(
+        private readonly string $storagePath,
+    ) {
         parent::__construct($storagePath);
     }
 
-    public function getUrl($path){
-        return url(\Scrawler\App::engine()->config()->get('storage.local').'/'.$path);
+    public function getUrl(string $path): string
+    {
+        if (function_exists('url')) {
+            return url($this->storagePath.'/'.$path);
+        }
+
+        return $this->storagePath.'/'.$path;
     }
 }

@@ -1,93 +1,92 @@
 <?php
-/**
- * Scarawler Filesystem Service
+/*
+ * This file is part of the Scrawler package.
  *
- * @package: Scrawler
- * @author: Pranjal Pandey
+ * (c) Pranjal Pandey <its.pranjalpandey@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace Scrawler;
 
-use Scrawler\Scrawler;
 use Scrawler\Interfaces\StorageInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+/**
+ * Scrawler filesystem storage engine.
+ */
 class StorageEngine extends \League\Flysystem\Filesystem
 {
     /**
-     * @var StorageInterface
+     * @param array<mixed> $config
      */
-    protected $adapter;
-
-    /**
-     * Constructor.
-     *
-     * @param StorageInterface $adapter
-     * @param \League\Flysystem\Config|array     $config
-     */
-    public function __construct(StorageInterface $adapter, $config = array())
+    public function __construct(protected StorageInterface $adapter, array $config = [])
     {
-        $this->adapter = $adapter;
-        parent::__construct($adapter, $config);
+        parent::__construct($this->adapter, $config);
     }
 
     /**
      * Get the Adapter.
-     *
-     * @return StorageInterface adapter
      */
-    public function getAdapter()
+    public function getAdapter(): StorageInterface
     {
         return $this->adapter;
     }
 
-
-  
     /**
-     * Stores the files in request to  specific path
+     * Stores the files in request to  specific path.
      *
-     * @param string $path
-     * @return array path
+     * @return array<array<int<0, max>, string>|string>
      */
-    public function saveRequest(String $path = '')
+    public function saveRequest(string $path = ''): array
     {
-        $uploaded = [];
-        $files = \Scrawler\App::engine()->request()->files->all();
-        foreach ($files as $name => $file) {
-            if (\is_array($file)) {
-                $paths = [];
-                foreach ($file as $single) {
-                    if ($single) {
-                        $filepath = $this->writeRequest($single, $path);
-                        array_push($paths, $filepath);
+        if (function_exists('request')) {
+            $uploaded = [];
+            $files = request()->files->all();
+            foreach ($files as $name => $file) {
+                if (\is_array($file)) {
+                    $paths = [];
+                    foreach ($file as $single) {
+                        if ($single) {
+                            $filepath = $this->writeUploaded($single, $path);
+                            $paths[] = $filepath;
+                        }
                     }
-                }
-                $uploaded[$name] = $paths;
-            } else {
-                if ($file) {
-                    $uploaded[$name] = $this->writeRequest($file, $path);
+                    $uploaded[$name] = $paths;
+                } elseif ($file) {
+                    $uploaded[$name] = $this->writeUploaded($file, $path);
                 }
             }
+
+            return $uploaded;
         }
-        return $uploaded;
+
+        throw new \Exception('saveRequest() method requires scrawler\http package');
     }
 
-    public function writeRequest($file, $path = '', $filename = null)
+    /**
+     * Write the request's uploaded file to the storage.
+     */
+    public function writeUploaded(UploadedFile $file, string $path = '', ?string $filename = null): string
     {
-        $content = file_get_contents($file->getPathname());
-      
-        $originalname = explode(".", $file->getClientOriginalName());
-        if ($filename == null) {
+        $content = \Safe\file_get_contents($file->getPathname());
+
+        $originalname = explode('.', $file->getClientOriginalName());
+        if (null == $filename) {
             $filename = $originalname[0].'_'.uniqid().'.'.$file->getClientOriginalExtension();
         } else {
             $filename = $filename.'.'.$file->getClientOriginalExtension();
         }
         $this->write($path.$filename, $content);
+
         return $path.$filename;
     }
 
-
-
-    public function getUrl($path)
+    /**
+     * Get file public Url.
+     */
+    public function getUrl(string $path): string
     {
         return $this->getAdapter()->getUrl($path);
     }
