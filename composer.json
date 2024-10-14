@@ -19,7 +19,8 @@
     ],
     "require": {
         "league/flysystem": "^3.0",
-        "thecodingmachine/safe": "^2.5"
+        "thecodingmachine/safe": "^2.5",
+        "symfony/mime": "^7.1"
     },
     "require-dev": {
         "rector/rector": "^1.2",
