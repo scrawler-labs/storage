@@ -10,12 +10,18 @@
  */
 
 namespace Scrawler\Validator;
-use \Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class Whitelist extends \Scrawler\Validator\AbstractValidator
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
+class Whitelist extends AbstractValidator
 {
-
+    /**
+     * @var array<string>
+     */
     protected array $allowedMimeTypes = [];
+    /**
+     * @var array<string>
+     */
     protected array $allowedExtensions = [];
     protected int $maxSize = 0;
 
@@ -40,39 +46,24 @@ class Whitelist extends \Scrawler\Validator\AbstractValidator
     }
 
     /**
-     * Set the maximum file size.
-     *
-     * @param int $maxSize
-     */
-    public function maxSize(int $maxSize): void
-    {
-        $this->maxSize = $this->maxSize > $maxSize ? $maxSize : $this->maxSize;
-    }
-
-    /**
      * Validate the uploaded file.
      *
-     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
      * @throws \Scrawler\Exception\FileValidationException
-     *
      */
+    #[\Override]
     public function validate(UploadedFile $file): void
     {
-
-        if (!empty($this->allowedMimeTypes) && !\in_array($file->getMimeType(), $this->allowedMimeTypes, true)) {
+        if ([] !== $this->allowedMimeTypes && !\in_array($file->getMimeType(), $this->allowedMimeTypes, true)) {
             throw new \Scrawler\Exception\FileValidationException('Invalid file type.');
         }
 
-        if (!empty($this->allowedExtensions) && !\in_array($file->guessExtension(), $this->allowedExtensions, true)) {
+        if ([] !== $this->allowedExtensions && !\in_array($file->guessExtension(), $this->allowedExtensions, true)) {
             throw new \Scrawler\Exception\FileValidationException('Invalid file extension.');
         }
     }
 
-
-
     /**
      * Pdf whitelist for pdf with 5MB max file size.
-     * @return \Scrawler\Validator\Whitelist
      */
     public static function pdf(): self
     {
@@ -90,27 +81,24 @@ class Whitelist extends \Scrawler\Validator\AbstractValidator
 
     /**
      * Video whitelist for mp4, mov, mpeg, webm with 20MB max file size.
-     * @return \Scrawler\Validator\Whitelist
      */
-    public static function video():self
+    public static function video(): self
     {
         $whitelist = new self();
         $whitelist->allowedMimeTypes([
             'video/mp4',
             'video/quicktime',
             'video/mpeg',
-            'video/webm'
+            'video/webm',
         ]);
         $whitelist->allowedExtensions([
             'mp4',
             'mov',
             'mpeg',
-            'webm'
+            'webm',
         ]);
         $whitelist->maxSize(1024 * 1024 * 20);
-        
+
         return $whitelist;
-
     }
-
 }

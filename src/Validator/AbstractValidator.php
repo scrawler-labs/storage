@@ -10,7 +10,7 @@
 
 namespace Scrawler\Validator;
 
-use \Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 abstract class AbstractValidator
 {
@@ -24,27 +24,31 @@ abstract class AbstractValidator
         return $file->getContent();
     }
 
+    public function maxSize(int $maxSize): void
+    {
+        $this->maxSize = $this->maxSize > $maxSize ? $maxSize : $this->maxSize;
+    }
+
     /**
      * Basic Validate the uploaded file.
      *
-     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
      * @throws \Scrawler\Exception\FileValidationException
      */
     public function runValidate(UploadedFile $file): void
     {
-        if($this->maxSize = 0){
-            $this->maxSize = UploadedFile::getMaxFilesize();
+        if (0 === $this->maxSize) {
+            $this->maxSize = (int) UploadedFile::getMaxFilesize();
         }
 
-        if(!$file->isValid()){
+        if (!$file->isValid()) {
             throw new \Scrawler\Exception\FileValidationException($file->getErrorMessage());
         }
 
-        if ($file->getError() !== \UPLOAD_ERR_OK) {
+        if (\UPLOAD_ERR_OK !== $file->getError()) {
             throw new \Scrawler\Exception\FileValidationException($file->getErrorMessage());
         }
 
-        if ($this->maxSize > 0 && $file->getSize() > $this->maxSize) {
+        if ($file->getSize() > $this->maxSize) {
             throw new \Scrawler\Exception\FileValidationException('File size size too large.');
         }
 
@@ -54,10 +58,7 @@ abstract class AbstractValidator
     /**
      * Validate the uploaded file.
      *
-     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
      * @throws \Scrawler\Exception\FileValidationException
      */
-    public abstract function validate(UploadedFile $file): void;
-    
-
+    abstract public function validate(UploadedFile $file): void;
 }

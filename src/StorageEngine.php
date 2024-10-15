@@ -39,7 +39,7 @@ class StorageEngine extends \League\Flysystem\Filesystem
      *
      * @return array<array<int<0, max>, string>|string>
      */
-    public function saveRequest(string $path = '',?\Scrawler\Validator\Whitelist $whitelist=null): array
+    public function saveRequest(string $path = '', ?Validator\Whitelist $whitelist = null): array
     {
         if (function_exists('request')) {
             $uploaded = [];
@@ -49,13 +49,13 @@ class StorageEngine extends \League\Flysystem\Filesystem
                     $paths = [];
                     foreach ($file as $single) {
                         if ($single) {
-                            $filepath = $this->writeUploaded($single, $path,$whitelist);
+                            $filepath = $this->writeUploaded($single, $path, $whitelist);
                             $paths[] = $filepath;
                         }
                     }
                     $uploaded[$name] = $paths;
                 } elseif ($file) {
-                    $uploaded[$name] = $this->writeUploaded($file, $path,$whitelist);
+                    $uploaded[$name] = $this->writeUploaded($file, $path, $whitelist);
                 }
             }
 
@@ -68,18 +68,18 @@ class StorageEngine extends \League\Flysystem\Filesystem
     /**
      * Write the request's uploaded file to the storage.
      */
-    public function writeUploaded(UploadedFile $file ,string $path = '',?\Scrawler\Validator\AbstractValidator $validator=null, ?string $filename = null): string
+    public function writeUploaded(UploadedFile $file, string $path = '', ?Validator\AbstractValidator $validator = null, ?string $filename = null): string
     {
-        if (null === $validator) {
-           $validator = new \Scrawler\Validator\Blacklist();
+        if (!$validator instanceof Validator\AbstractValidator) {
+            $validator = new Validator\Blacklist();
         }
 
-        $validator->validate($file);
+        $validator->runValidate($file);
         $content = $validator->getProcessedContent($file);
 
         $originalname = explode('.', $file->getClientOriginalName());
         if (null == $filename) {
-            $filename = $this->sanitizeFilename($originalname).'.'.$file->guessExtension();
+            $filename = $this->sanitizeFilename($originalname[0]).'.'.$file->guessExtension();
         } else {
             $filename = $this->sanitizeFilename($filename).'.'.$file->guessExtension();
         }
@@ -93,14 +93,12 @@ class StorageEngine extends \League\Flysystem\Filesystem
      */
     private function sanitizeFilename(string $filename): string
     {
-
-        $name = preg_replace('/[^a-z0-9-_.]/', '', subject: strtolower($filename));
-        $name = preg_replace('/[\. _-]+/', '-', $name);
-        $name = trim($name, '-');
+        $name = \Safe\preg_replace('/[^a-z0-9-_.]/', '', subject: strtolower($filename));
+        $name = \Safe\preg_replace('/[\. _-]+/', '-', (string) $name);
+        $name = trim((string) $name, '-');
         $name = substr($name, 0, 100);
-        $name = $name.'_'.uniqid();
-        return $name;
 
+        return $name.'_'.uniqid();
     }
 
     /**

@@ -19,7 +19,7 @@ use Scrawler\Interfaces\StorageInterface;
  */
 class Storage
 {
-    protected ?StorageEngine $engine;
+    protected ?StorageEngine $engine = null;
 
     public function setAdapter(StorageInterface $adapter): void
     {
