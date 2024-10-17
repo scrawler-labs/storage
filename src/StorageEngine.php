@@ -37,14 +37,23 @@ class StorageEngine extends \League\Flysystem\Filesystem
     /**
      * Stores the files in request to  specific path.
      *
+     * @param array<string,Validator\AbstractValidator>|Validator\AbstractValidator|null $whitelists
+     *
      * @return array<array<int<0, max>, string>|string>
      */
-    public function saveRequest(string $path = '', ?Validator\Whitelist $whitelist = null): array
+    public function saveRequest(string $path = '', array|Validator\AbstractValidator|null $whitelists = null): array
     {
         if (function_exists('request')) {
             $uploaded = [];
             $files = request()->files->all();
             foreach ($files as $name => $file) {
+                if (is_array($whitelists) && array_key_exists($name, $whitelists)) {
+                    $whitelist = $whitelists[$name];
+                } elseif ($whitelists instanceof Validator\AbstractValidator) {
+                    $whitelist = $whitelists;
+                } else {
+                    $whitelist = null;
+                }
                 if (\is_array($file)) {
                     $paths = [];
                     foreach ($file as $single) {
