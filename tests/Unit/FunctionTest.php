@@ -1,4 +1,5 @@
 <?php
+use League\Flysystem\UnableToGeneratePublicUrl;
 
 it('tests for storage function', function () {
     $storage = storage();
@@ -13,7 +14,13 @@ it('tests for storage write', function () {
     expect($content)->toBe('Hello World');
 });
 
-it('tests for storage_url()', function () {
+it('tests for publicUrl()', function () {
     $storage = get_storage();
-    expect($storage->getUrl('test.txt'))->toBeString();
+    expect($storage->publicUrl('test.txt'))->toBeString();
+});
+
+it('tests for publicUrl() in private file', function () {
+    $storage = get_storage();
+    $storage->write('testpvt.txt', 'Hello World', ['visibility' => 'private']); 
+    expect(fn() => $storage->publicUrl('testpvt.txt'))->toThrow(UnableToGeneratePublicUrl::class);
 });

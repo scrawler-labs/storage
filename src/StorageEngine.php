@@ -10,8 +10,8 @@
 
 namespace Scrawler;
 
+use League\Flysystem\FilesystemAdapter;
 use Scrawler\Http\Request;
-use Scrawler\Interfaces\StorageInterface;
 use Scrawler\Validator\Storage\AbstractValidator as Validator;
 use Scrawler\Validator\Storage\Blacklist;
 use Symfony\Component\HttpFoundation\File\File;
@@ -25,27 +25,20 @@ class StorageEngine extends \League\Flysystem\Filesystem
     /**
      * @param array<mixed> $config
      */
-    public function __construct(protected StorageInterface $adapter, array $config = [])
+    public function __construct(protected FilesystemAdapter $adapter, array $config = [])
     {
         parent::__construct($this->adapter, $config);
-    }
-
-    /**
-     * Get the Adapter.
-     */
-    public function getAdapter(): StorageInterface
-    {
-        return $this->adapter;
     }
 
     /**
      * Stores the files in request to  specific path.
      *
      * @param array<string,Validator>|Validator|null $validators
+     * @param array<string,mixed>                    $options
      *
      * @return array<array<int<0, max>, string>|string>
      */
-    public function writeRequest(Request $request, ?string $path = '', array|Validator|null $validators = null): array
+    public function writeRequest(Request $request, string $path = '', array|Validator|null $validators = null, array $options = []): array
     {
         $uploaded = [];
         $files = $request->files->all();
@@ -61,13 +54,13 @@ class StorageEngine extends \League\Flysystem\Filesystem
                 $paths = [];
                 foreach ($file as $single) {
                     if ($single) {
-                        $filepath = $this->writeFile($single, $path, $validator);
+                        $filepath = $this->writeFile($single, $path, $validator, $options);
                         $paths[] = $filepath;
                     }
                 }
                 $uploaded[$name] = $paths;
             } elseif ($file) {
-                $uploaded[$name] = $this->writeFile($file, $path, $validator);
+                $uploaded[$name] = $this->writeFile($file, $path, $validator, $options);
             }
         }
 
@@ -76,8 +69,10 @@ class StorageEngine extends \League\Flysystem\Filesystem
 
     /**
      * Write the request's uploaded file to the storage.
+     *
+     * @param array<string,mixed> $options
      */
-    public function writeFile(UploadedFile|File $file, ?string $path = '', ?Validator $validator = null, ?string $filename = null): string
+    public function writeFile(UploadedFile|File $file, string $path = '', ?Validator $validator = null, array $options = []): string
     {
         if (!$validator instanceof Validator) {
             $validator = new Blacklist();
@@ -87,14 +82,29 @@ class StorageEngine extends \League\Flysystem\Filesystem
         $content = $validator->getProcessedContent($file);
 
         $originalname = explode('.', $file->getFilename());
-        if (null == $filename) {
-            $filename = $this->sanitizeFilename($originalname[0]).'.'.$file->guessExtension();
+        if (array_key_exists('filename', $options)) {
+            $filename = $this->sanitizeFilename($options['filename']).'.'.$file->guessExtension();
         } else {
-            $filename = $this->sanitizeFilename($filename).'.'.$file->guessExtension();
+            $filename = $this->sanitizeFilename($originalname[0]).'.'.$file->guessExtension();
         }
-        $this->write($path.$filename, $content);
+        $visibility = $options['visibility'] ?? 'public';
+        $this->write($path.'/'.$visibility.'/'.$filename, $content, ['visibility' => $visibility]);
 
-        return $path.$filename;
+        return $path.'/'.$visibility.'/'.$filename;
+    }
+
+    /**
+     * Write the content to the storage.
+     *
+     * @param array<string,mixed> $config
+     */
+    public function write(string $path, string $content, array $config = []): void
+    {
+        if (!array_key_exists('visibility', $config)) {
+            $config['visibility'] = 'public';
+        }
+
+        parent::write($config['visibility'].'/'.$path, $content, $config);
     }
 
     /**
@@ -108,13 +118,5 @@ class StorageEngine extends \League\Flysystem\Filesystem
         $name = substr($name, 0, 100);
 
         return $name.'_'.uniqid();
-    }
-
-    /**
-     * Get file public Url if availabe else returns path.
-     */
-    public function getUrl(string $path): string
-    {
-        return $this->getAdapter()->getUrl($path);
     }
 }

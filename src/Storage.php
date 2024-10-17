@@ -10,7 +10,7 @@
 
 namespace Scrawler;
 
-use Scrawler\Interfaces\StorageInterface;
+use League\Flysystem\FilesystemAdapter;
 
 /**
  * Scrawler Filesystem Class.
@@ -21,7 +21,10 @@ class Storage
 {
     private ?StorageEngine $engine = null;
 
-    public function setAdapter(StorageInterface $adapter): void
+    public const PUBLIC = 'public';
+    public const PRIVATE = 'private';
+
+    public function setAdapter(FilesystemAdapter $adapter): void
     {
         $this->engine = new StorageEngine($adapter);
     }

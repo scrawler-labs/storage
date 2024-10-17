@@ -33,7 +33,7 @@ it('tests for writeFile() method ', function () {
     $storage = get_storage();
     $request = new Scrawler\Http\Request(files: ['test' => uploaded('hello.txt')]);
     $files = $request->files->all();
-    $uploaded = $storage->writeFile($files['test'], filename: 'custom');
+    $uploaded = $storage->writeFile($files['test'], options: ['filename' => 'custom']);
 
     expect($uploaded)->toContain('custom');
 });

@@ -11,9 +11,10 @@
 namespace Scrawler\Adapters\Storage;
 
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Scrawler\Interfaces\StorageInterface;
+use League\Flysystem\UnableToGeneratePublicUrl;
+use League\Flysystem\UrlGeneration\PublicUrlGenerator;
 
-class LocalAdapter extends LocalFilesystemAdapter implements StorageInterface
+class LocalAdapter extends LocalFilesystemAdapter implements PublicUrlGenerator
 {
     public function __construct(
         private readonly string $storagePath,
@@ -22,14 +23,17 @@ class LocalAdapter extends LocalFilesystemAdapter implements StorageInterface
     }
 
     #[\Override]
-    public function getUrl(string $path): string
+    public function publicUrl(string $path, \League\Flysystem\Config $config): string
     {
-        if (function_exists('url')) {
-            // @codeCoverageIgnoreStart
-            return url($this->storagePath.'/'.$path);
-            // @codeCoverageIgnoreEnd
-        }
+        if ($this->fileExists('public/'.$path)) {
+            if (function_exists('url')) {
+                // @codeCoverageIgnoreStart
+                return url($this->storagePath.'//public//'.$path);
+                // @codeCoverageIgnoreEnd
+            }
 
-        return $this->storagePath.'/'.$path;
+            return $this->storagePath.'//public//'.$path;
+        }
+        throw new UnableToGeneratePublicUrl('File is not public', $path);
     }
 }
