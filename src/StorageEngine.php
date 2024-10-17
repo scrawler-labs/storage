@@ -10,7 +10,11 @@
 
 namespace Scrawler;
 
+use Scrawler\Http\Request;
 use Scrawler\Interfaces\StorageInterface;
+use Scrawler\Validator\Storage\AbstractValidator as Validator;
+use Scrawler\Validator\Storage\Blacklist;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -37,56 +41,52 @@ class StorageEngine extends \League\Flysystem\Filesystem
     /**
      * Stores the files in request to  specific path.
      *
-     * @param array<string,Validator\AbstractValidator>|Validator\AbstractValidator|null $whitelists
+     * @param array<string,Validator>|Validator|null $validators
      *
      * @return array<array<int<0, max>, string>|string>
      */
-    public function saveRequest(string $path = '', array|Validator\AbstractValidator|null $whitelists = null): array
+    public function writeRequest(Request $request, ?string $path = '', array|Validator|null $validators = null): array
     {
-        if (function_exists('request')) {
-            $uploaded = [];
-            $files = request()->files->all();
-            foreach ($files as $name => $file) {
-                if (is_array($whitelists) && array_key_exists($name, $whitelists)) {
-                    $whitelist = $whitelists[$name];
-                } elseif ($whitelists instanceof Validator\AbstractValidator) {
-                    $whitelist = $whitelists;
-                } else {
-                    $whitelist = null;
-                }
-                if (\is_array($file)) {
-                    $paths = [];
-                    foreach ($file as $single) {
-                        if ($single) {
-                            $filepath = $this->writeUploaded($single, $path, $whitelist);
-                            $paths[] = $filepath;
-                        }
-                    }
-                    $uploaded[$name] = $paths;
-                } elseif ($file) {
-                    $uploaded[$name] = $this->writeUploaded($file, $path, $whitelist);
-                }
+        $uploaded = [];
+        $files = $request->files->all();
+        foreach ($files as $name => $file) {
+            if (is_array($validators) && array_key_exists($name, $validators)) {
+                $validator = $validators[$name];
+            } elseif ($validators instanceof Validator) {
+                $validator = $validators;
+            } else {
+                $validator = null;
             }
-
-            return $uploaded;
+            if (\is_array($file)) {
+                $paths = [];
+                foreach ($file as $single) {
+                    if ($single) {
+                        $filepath = $this->writeFile($single, $path, $validator);
+                        $paths[] = $filepath;
+                    }
+                }
+                $uploaded[$name] = $paths;
+            } elseif ($file) {
+                $uploaded[$name] = $this->writeFile($file, $path, $validator);
+            }
         }
 
-        throw new \Exception('saveRequest() method requires scrawler\http package');
+        return $uploaded;
     }
 
     /**
      * Write the request's uploaded file to the storage.
      */
-    public function writeUploaded(UploadedFile $file, string $path = '', ?Validator\AbstractValidator $validator = null, ?string $filename = null): string
+    public function writeFile(UploadedFile|File $file, ?string $path = '', ?Validator $validator = null, ?string $filename = null): string
     {
-        if (!$validator instanceof Validator\AbstractValidator) {
-            $validator = new Validator\Blacklist();
+        if (!$validator instanceof Validator) {
+            $validator = new Blacklist();
         }
 
         $validator->runValidate($file);
         $content = $validator->getProcessedContent($file);
 
-        $originalname = explode('.', $file->getClientOriginalName());
+        $originalname = explode('.', $file->getFilename());
         if (null == $filename) {
             $filename = $this->sanitizeFilename($originalname[0]).'.'.$file->guessExtension();
         } else {
@@ -111,7 +111,7 @@ class StorageEngine extends \League\Flysystem\Filesystem
     }
 
     /**
-     * Get file public Url.
+     * Get file public Url if availabe else returns path.
      */
     public function getUrl(string $path): string
     {

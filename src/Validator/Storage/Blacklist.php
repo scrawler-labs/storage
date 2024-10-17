@@ -8,8 +8,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Scrawler\Validator;
+namespace Scrawler\Validator\Storage;
 
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Blacklist extends AbstractValidator
@@ -86,14 +87,15 @@ class Blacklist extends AbstractValidator
      * @throws \Scrawler\Exception\FileValidationException
      */
     #[\Override]
-    public function validate(UploadedFile $file): void
+    public function validate(UploadedFile|File $file): void
     {
         if (\in_array($file->getMimeType(), $this->blockedMimeTypes)) {
             throw new \Scrawler\Exception\FileValidationException('Invalid file type.');
         }
-
+        // @codeCoverageIgnoreStart
         if (\in_array($file->guessExtension(), $this->blockedExtensions)) {
             throw new \Scrawler\Exception\FileValidationException('Invalid file extension.');
         }
+        // @codeCoverageIgnoreEnd
     }
 }

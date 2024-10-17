@@ -8,8 +8,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Scrawler\Validator;
+namespace Scrawler\Validator\Storage;
 
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 abstract class AbstractValidator
@@ -19,14 +20,14 @@ abstract class AbstractValidator
     /*
     * Get processed file content.
     */
-    public function getProcessedContent(UploadedFile $file): string
+    public function getProcessedContent(UploadedFile|File $file): string
     {
         return $file->getContent();
     }
 
     public function maxSize(int $maxSize): void
     {
-        $this->maxSize = $this->maxSize > $maxSize ? $maxSize : $this->maxSize;
+        $this->maxSize = $this->maxSize > $maxSize || 0 == $this->maxSize ? $maxSize : $this->maxSize;
     }
 
     /**
@@ -34,18 +35,21 @@ abstract class AbstractValidator
      *
      * @throws \Scrawler\Exception\FileValidationException
      */
-    public function runValidate(UploadedFile $file): void
+    public function runValidate(UploadedFile|File $file): void
     {
+        // @codeCoverageIgnoreStart
+        if ($file instanceof UploadedFile) {
+            if (!$file->isValid()) {
+                throw new \Scrawler\Exception\FileValidationException($file->getErrorMessage());
+            }
+
+            if (\UPLOAD_ERR_OK !== $file->getError()) {
+                throw new \Scrawler\Exception\FileValidationException($file->getErrorMessage());
+            }
+        }
+        // @codeCoverageIgnoreEnd
         if (0 === $this->maxSize) {
             $this->maxSize = (int) UploadedFile::getMaxFilesize();
-        }
-
-        if (!$file->isValid()) {
-            throw new \Scrawler\Exception\FileValidationException($file->getErrorMessage());
-        }
-
-        if (\UPLOAD_ERR_OK !== $file->getError()) {
-            throw new \Scrawler\Exception\FileValidationException($file->getErrorMessage());
         }
 
         if ($file->getSize() > $this->maxSize) {
@@ -60,5 +64,5 @@ abstract class AbstractValidator
      *
      * @throws \Scrawler\Exception\FileValidationException
      */
-    abstract public function validate(UploadedFile $file): void;
+    abstract public function validate(UploadedFile|File $file): void;
 }

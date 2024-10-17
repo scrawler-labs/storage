@@ -9,8 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Scrawler\Validator;
+namespace Scrawler\Validator\Storage;
 
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Whitelist extends AbstractValidator
@@ -23,16 +24,17 @@ class Whitelist extends AbstractValidator
      * @var array<string>
      */
     protected array $allowedExtensions = [];
-    protected int $maxSize = 0;
 
     /**
      * Set the allowed mime types.
      *
      * @param array<string> $allowedMimeTypes
      */
-    public function allowedMimeTypes(array $allowedMimeTypes): void
+    public function allowedMimeTypes(array $allowedMimeTypes): self
     {
         $this->allowedMimeTypes = $allowedMimeTypes;
+
+        return $this;
     }
 
     /**
@@ -40,9 +42,11 @@ class Whitelist extends AbstractValidator
      *
      * @param array<string> $allowedExtensions
      */
-    public function allowedExtensions(array $allowedExtensions): void
+    public function allowedExtensions(array $allowedExtensions): self
     {
         $this->allowedExtensions = $allowedExtensions;
+
+        return $this;
     }
 
     /**
@@ -51,7 +55,7 @@ class Whitelist extends AbstractValidator
      * @throws \Scrawler\Exception\FileValidationException
      */
     #[\Override]
-    public function validate(UploadedFile $file): void
+    public function validate(UploadedFile|File $file): void
     {
         if ([] !== $this->allowedMimeTypes && !\in_array($file->getMimeType(), $this->allowedMimeTypes, true)) {
             throw new \Scrawler\Exception\FileValidationException('Invalid file type.');

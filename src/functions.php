@@ -11,6 +11,7 @@
 if (!function_exists('storage')) {
     function storage(): Scrawler\Storage
     {
+        // @codeCoverageIgnoreStart
         if (class_exists('\Scrawler\App')) {
             if (!Scrawler\App::engine()->has('storage')) {
                 Scrawler\App::engine()->register('storage', new Scrawler\Storage());
@@ -18,14 +19,8 @@ if (!function_exists('storage')) {
 
             return Scrawler\App::engine()->storage();
         }
+        // @codeCoverageIgnoreEnd
 
         return new Scrawler\Storage();
-    }
-}
-
-if (!function_exists('storage_url')) {
-    function storage_url(string $path): string
-    {
-        return storage()->getUrl($path);
     }
 }
