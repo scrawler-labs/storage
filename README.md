@@ -5,7 +5,7 @@
 
 <a href="https://github.com/scrawler-labs/storage/actions/workflows/main.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/scrawler-labs/storage/main.yml?style=flat-square">
 </a>
-[![Scrutinizer Code Quality](https://img.shields.io/scrutinizer/quality/g/scrawler-labs/app?style=flat-square)](https://scrutinizer-ci.com/g/scrawler-labs/app/?branch=main)
+[![Scrutinizer Code Quality](https://img.shields.io/scrutinizer/quality/g/scrawler-labs/storage?style=flat-square)](https://scrutinizer-ci.com/g/scrawler-labs/storage/?branch=main)
 <a href="[https://github.com/scrawler-labs/app/actions/workflows/main.yml](https://github.com/scrawler-labs/app/actions/workflows/main.yml)"><img src="https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat-square" alt="PHPStan Enabled"></a>
 [![Packagist Version](https://img.shields.io/packagist/v/scrawler/app?style=flat-square)](https://packagist.org/packages/scrawler/app)
 [![Packagist License](https://img.shields.io/packagist/l/scrawler/app?style=flat-square)](https://packagist.org/packages/scrawler/app)
