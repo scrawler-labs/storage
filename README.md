@@ -14,7 +14,7 @@
 <br><br>
 
 
-🔥Wrapper around Flysystem with added features for scrawler storage engine 🔥<br>
+🔥A Flysystem wrapper with added file validation and security for efficient, safe file management. 🔥<br>
 🇮🇳 Made in India 🇮🇳
 </div>
 
